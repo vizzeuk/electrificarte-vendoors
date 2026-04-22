@@ -27,15 +27,11 @@ const faqs = [
   },
   {
     q: "¿Los leads ya están precalificados?",
-    a: "Sí. Antes de enviarte el lead, validamos que el contacto tenga intención real de compra, que sea del segmento correcto y que no haya sido atendido previamente por otro vendedor de la red.",
+    a: "Sí. Cada lead pasa por un proceso de validación: confirmamos intención real de compra, segmento de interés y que no haya sido contactado previamente por otro vendedor activo en la red.",
   },
   {
     q: "¿Puedo cancelar en cualquier momento?",
     a: "Sí, sin penalidades. Solo debes avisar con 10 días de anticipación antes de tu próximo ciclo de facturación.",
-  },
-  {
-    q: "¿Necesito experiencia vendiendo autos eléctricos?",
-    a: "No es obligatorio, pero te recomendamos al menos familiarizarte con los modelos más consultados. Tenemos una guía de onboarding que te deja listo en menos de 30 minutos.",
   },
   {
     q: "¿Cómo se entrega el lead?",
@@ -405,7 +401,7 @@ export default function HomePage() {
                 <ul className="text-left max-w-sm mx-auto space-y-3 mb-10">
                   {[
                     "Leads calificados según disponibilidad de tu zona",
-                    "Entrega en tiempo real por WhatsApp",
+                    "Notificación de leads por WhatsApp",
                     "Acceso al panel de seguimiento",
                     "Soporte prioritario",
                     "Sin contrato de permanencia",

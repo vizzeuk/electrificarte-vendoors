@@ -19,8 +19,8 @@ export function Footer() {
 
           {/* Links */}
           <div className="flex items-center gap-6 text-sm text-white/50">
-            <Link href="https://electrificarte.cl" target="_blank" className="hover:text-white transition-colors">
-              electrificarte.cl
+            <Link href="https://electrificarte.com" target="_blank" className="hover:text-white transition-colors">
+              electrificarte.com
             </Link>
             <Link href="/unirse" className="hover:text-white transition-colors">
               Registro
