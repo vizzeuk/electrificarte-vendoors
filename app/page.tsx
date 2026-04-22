@@ -351,7 +351,7 @@ export default function HomePage() {
                 {
                   icon: <IconShield />,
                   title: "Red exclusiva y controlada",
-                  desc: "Cupo limitado de vendedores por zona. Más leads para ti, menos competencia interna.",
+                  desc: "Leads segmentados por cercanía geográfica.",
                 },
               ].map((b, i) => (
                 <FadeIn key={b.title} delay={i * 0.1}>
