@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer className="bg-black border-t border-white/10 py-12">
       <div className="max-w-6xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex flex-row items-start justify-between gap-6 md:items-center">
           {/* Logo */}
           <div>
             <img

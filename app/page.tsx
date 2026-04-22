@@ -390,17 +390,17 @@ export default function HomePage() {
                 <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-black text-xs font-black px-4 py-1 rounded-full uppercase tracking-wide">
                   Precio de lanzamiento
                 </span>
-                <div className="flex items-end justify-center gap-2 mb-2">
-                  <span className="text-white/30 text-2xl line-through">$25.980</span>
+                <div className="flex items-end justify-center gap-2 mb-2 flex-wrap">
+                  <span className="text-white/30 text-lg sm:text-2xl line-through">$25.980</span>
                   <span
-                    className="text-6xl font-black text-white"
+                    className="text-4xl sm:text-6xl font-black text-white"
                     style={{ fontFamily: "var(--font-space), sans-serif" }}
                   >
                     $12.990
                   </span>
-                  <span className="text-white/50 text-base mb-2">/mes</span>
+                  <span className="text-white/50 text-sm sm:text-base mb-1 sm:mb-2">/mes</span>
                 </div>
-                <p className="text-white/40 text-sm mb-10">50% dcto · 3 primeros meses · Luego $25.980/mes · Cancela cuando quieras</p>
+                <p className="text-white/40 text-xs sm:text-sm mb-8 md:mb-10">50% dcto · 3 primeros meses · Luego $25.980/mes · Cancela cuando quieras</p>
 
                 <ul className="text-left max-w-sm mx-auto space-y-3 mb-10">
                   {[
