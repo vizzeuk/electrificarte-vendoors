@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { REGIONES } from "@/lib/regiones-chile";
 
 const BRANDS = [
   "Tesla","BYD","Volvo","MG","Dongfeng","Haval","JAC","Toyota","Hyundai",
@@ -56,24 +56,25 @@ export default function UnirsePage() {
   const [rutError,  setRutError]  = useState(false);
   const [form, setForm] = useState({
     nombre: "", apellido: "", rut: "", email: "",
-    telefono: "", concesionario: "", comuna: "",
+    telefono: "", concesionario: "", region: "", comuna: "",
   });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     if (name === "rut") {
       const formatted = formatRut(value);
       setForm((f) => ({ ...f, rut: formatted }));
-      if (rutError && formatted.length > 3) {
-        setRutError(!validateRut(formatted));
-      }
+      if (rutError && formatted.length > 3) setRutError(!validateRut(formatted));
     } else if (name === "telefono") {
-      const normalized = normalizePhone(value);
-      setForm((f) => ({ ...f, telefono: normalized }));
+      setForm((f) => ({ ...f, telefono: normalizePhone(value) }));
+    } else if (name === "region") {
+      setForm((f) => ({ ...f, region: value, comuna: "" }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
     }
   }
+
+  const comunasDeRegion = REGIONES.find((r) => r.region === form.region)?.comunas ?? [];
 
   function handlePhoneDisplay(raw: string): string {
     return raw ? `+56 ${raw}` : "";
@@ -85,7 +86,7 @@ export default function UnirsePage() {
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     setError(null);
 
@@ -352,8 +353,56 @@ export default function UnirsePage() {
                       <div className="sm:col-span-2">
                         <Field label="Nombre del concesionario" name="concesionario" value={form.concesionario} onChange={handleChange} placeholder="Nombre del concesionario donde trabajas" required />
                       </div>
-                      <div className="sm:col-span-2">
-                        <Field label="Comuna donde está el concesionario" name="comuna" value={form.comuna} onChange={handleChange} placeholder="Ej: Las Condes, Providencia, Viña del Mar…" required />
+
+                      {/* Región */}
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                          Región <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            name="region"
+                            value={form.region}
+                            onChange={handleChange}
+                            required
+                            className={`w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors pr-10 ${!form.region ? "text-gray-400" : "text-gray-900"}`}
+                          >
+                            <option value="" disabled>Selecciona la región</option>
+                            {REGIONES.map((r) => (
+                              <option key={r.region} value={r.region} className="text-gray-900">{r.region}</option>
+                            ))}
+                          </select>
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Comuna */}
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                          Comuna <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            name="comuna"
+                            value={form.comuna}
+                            onChange={handleChange}
+                            required
+                            disabled={!form.region}
+                            className={`w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors pr-10 ${!form.comuna ? "text-gray-400" : "text-gray-900"} ${!form.region ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            <option value="" disabled>
+                              {form.region ? "Selecciona la comuna" : "Primero elige la región"}
+                            </option>
+                            {comunasDeRegion.map((c) => (
+                              <option key={c} value={c} className="text-gray-900">{c}</option>
+                            ))}
+                          </select>
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
