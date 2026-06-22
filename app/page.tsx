@@ -114,56 +114,87 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
 
-        {/* ── HERO — imagen de fondo ──────────────────────────── */}
-        <section className="relative min-h-screen flex items-center overflow-hidden bg-black">
-          {/* Background image */}
+        {/* ── HERO — imagen de fondo full-bleed ───────────────── */}
+        <section className="relative flex items-end sm:items-center overflow-hidden bg-black min-h-[100svh]">
+          {/* Imagen desktop (≥ sm) */}
           <Image
-            src="/imagen-hero2.png"
+            src="/imagen-hero3.png"
             alt="Red de vendedores Electrificarte"
             fill
             priority
-            className="object-cover object-center"
+            className="hidden sm:block object-cover object-center"
             sizes="100vw"
           />
-          {/* Overlay oscuro con degradado */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
-          {/* Tinte cyan muy sutil */}
-          <div className="absolute inset-0 bg-primary/5" />
+          {/* Imagen mobile (< sm) */}
+          <Image
+            src="/imagen-hero3-mobile.png"
+            alt="Red de vendedores Electrificarte"
+            fill
+            priority
+            className="sm:hidden object-cover object-top"
+            sizes="100vw"
+          />
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 pt-24 pb-16 md:pt-28 md:pb-20 w-full">
+          {/* Overlay desktop: degradado izquierda → derecha */}
+          <div className="absolute inset-0 hidden sm:block bg-gradient-to-r from-black/85 via-black/55 to-black/20" />
+          {/* Overlay mobile: degradado abajo → arriba para legibilidad del texto */}
+          <div className="absolute inset-0 sm:hidden bg-gradient-to-t from-black via-black/75 to-black/30" />
+
+          {/* Contenido */}
+          <div className="relative z-10 w-full max-w-6xl mx-auto px-5 md:px-8 pt-28 pb-12 sm:py-32">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
               className="max-w-2xl"
             >
+              {/* Badge */}
+              <p className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] mb-5">
+                Red exclusiva de vendedores
+              </p>
+
               <h1
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-4"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-5"
                 style={{ fontFamily: "var(--font-space), sans-serif" }}
               >
                 Vende más autos eléctricos{" "}
                 <span className="text-primary">sin buscar clientes</span>
               </h1>
 
-              <p className="text-base md:text-lg text-white/70 mb-7 max-w-xl leading-relaxed">
-                Únete a la red de vendedores de Electrificarte y recibe leads calificados de personas que ya quieren comprar. Sin gestionar publicidad, sin perder tiempo.
+              <p className="text-base sm:text-lg text-white/70 mb-8 max-w-lg leading-relaxed">
+                Únete a la red de vendedores de Electrificarte y recibe leads calificados de personas que ya quieren comprar. Sin publicidad, sin perder tiempo.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 sm:mb-0">
                 <Link
                   href="/unirse"
-                  className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+                  className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-base sm:text-lg shadow-[0_6px_32px_rgba(0,229,229,0.35)] hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Quiero sumarme
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </Link>
                 <a
                   href="#como-funciona"
-                  className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/10 text-white font-medium px-8 py-4 rounded-xl transition-all backdrop-blur-sm"
+                  className="inline-flex items-center justify-center gap-2 border border-white/25 hover:border-white/60 hover:bg-white/10 text-white font-medium px-8 py-4 rounded-xl transition-all backdrop-blur-sm text-base"
                 >
                   Cómo funciona
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </a>
+              </div>
+
+              {/* Stats rápidos — solo mobile, debajo de los CTAs */}
+              <div className="flex items-center gap-6 mt-8 sm:hidden">
+                {[
+                  { value: "3×",   label: "más cierres" },
+                  { value: "48h",  label: "entrega lead" },
+                  { value: "100%", label: "intención real" },
+                ].map((s) => (
+                  <div key={s.value} className="text-center">
+                    <p className="text-primary font-black text-xl" style={{ fontFamily: "var(--font-space), sans-serif" }}>{s.value}</p>
+                    <p className="text-white/50 text-[10px] uppercase tracking-wide">{s.label}</p>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </div>
