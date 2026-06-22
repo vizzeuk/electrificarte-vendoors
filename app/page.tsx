@@ -118,7 +118,7 @@ export default function HomePage() {
         <section className="relative min-h-screen flex items-center overflow-hidden bg-black">
           {/* Background image */}
           <Image
-            src="/imagen-hero.png"
+            src="/imagen-hero2.png"
             alt="Red de vendedores Electrificarte"
             fill
             priority
