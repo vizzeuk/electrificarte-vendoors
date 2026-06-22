@@ -13,6 +13,7 @@ const BRANDS = [
   "Avatr","GWM",
 ];
 
+// ── RUT formatting ───────────────────────────────────────────────────────────
 function formatRut(value: string) {
   const clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
   if (clean.length <= 1) return clean;
@@ -22,11 +23,37 @@ function formatRut(value: string) {
   return `${formatted}-${dv}`;
 }
 
+// ── Validación real de RUT chileno (Módulo 11) ───────────────────────────────
+function validateRut(rut: string): boolean {
+  const clean = rut.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (clean.length < 2) return false;
+  const body = clean.slice(0, -1);
+  const dv   = clean.slice(-1);
+  let sum = 0;
+  let multiplier = 2;
+  for (let i = body.length - 1; i >= 0; i--) {
+    sum += parseInt(body[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+  const remainder = sum % 11;
+  const expected = remainder === 0 ? "0" : remainder === 1 ? "K" : String(11 - remainder);
+  return dv === expected;
+}
+
+// ── Normalización de teléfono +56 ────────────────────────────────────────────
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  // Quita prefijo 56 si ya está
+  const stripped = digits.startsWith("56") && digits.length > 9 ? digits.slice(2) : digits;
+  return stripped.slice(0, 9);
+}
+
 export default function UnirsePage() {
-  const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
   const [descuento, setDescuento] = useState(false);
   const [brands,    setBrands]    = useState<string[]>([]);
+  const [rutError,  setRutError]  = useState(false);
   const [form, setForm] = useState({
     nombre: "", apellido: "", rut: "", email: "",
     telefono: "", concesionario: "", comuna: "",
@@ -35,10 +62,21 @@ export default function UnirsePage() {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     if (name === "rut") {
-      setForm((f) => ({ ...f, rut: formatRut(value) }));
+      const formatted = formatRut(value);
+      setForm((f) => ({ ...f, rut: formatted }));
+      if (rutError && formatted.length > 3) {
+        setRutError(!validateRut(formatted));
+      }
+    } else if (name === "telefono") {
+      const normalized = normalizePhone(value);
+      setForm((f) => ({ ...f, telefono: normalized }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
     }
+  }
+
+  function handlePhoneDisplay(raw: string): string {
+    return raw ? `+56 ${raw}` : "";
   }
 
   function toggleBrand(brand: string) {
@@ -47,13 +85,41 @@ export default function UnirsePage() {
     );
   }
 
-  async function handleSubmit(e: { preventDefault: () => void }) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    // Validar RUT antes de enviar
+    if (!validateRut(form.rut)) {
+      setRutError(true);
+      return;
+    }
     if (brands.length === 0) return;
+    if (form.telefono.length !== 9) {
+      setError("El teléfono debe tener exactamente 9 dígitos después del +56.");
+      return;
+    }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    setSubmitted(true);
+    try {
+      const res = await fetch("/api/unirse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          telefono: `+56${form.telefono}`,
+          marcas: brands,
+          descuento,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Error al enviar");
+      // Redirigir a Reveniu
+      window.location.href = json.checkoutUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error. Intenta nuevamente.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -79,10 +145,9 @@ export default function UnirsePage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="pb-8"
           >
-            <span className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 text-primary text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full mb-4">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+            <p className="text-primary text-[11px] font-bold uppercase tracking-widest mb-4">
               Red exclusiva · Vendedores
-            </span>
+            </p>
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-5"
               style={{ fontFamily: "var(--font-space), sans-serif" }}
@@ -132,253 +197,278 @@ export default function UnirsePage() {
       {/* ── Formulario + sidebar — blanco ───────────────────── */}
       <main className="flex-1 bg-gray-50 py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
 
-          {!submitted ? (
-            <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
+            {/* ── Sidebar ───────────────────────────────── */}
+            <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-28 lg:self-start order-2 lg:order-1">
 
-              {/* ── Sidebar ───────────────────────────────── */}
-              <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-28 lg:self-start order-2 lg:order-1">
+              {/* What you get */}
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-sm">
+                  <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
+                  Qué incluye tu suscripción
+                </h3>
+                <ul className="space-y-2.5">
+                  {[
+                    "Leads calificados con intención real de compra",
+                    "Entrega en tiempo real por WhatsApp",
+                    "Acceso al panel de seguimiento",
+                    "Sin comisión por venta cerrada",
+                    "Soporte prioritario de lunes a viernes",
+                    "Cancela cuando quieras, sin penalidades",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="material-symbols-outlined text-primary text-[14px] mt-0.5 flex-shrink-0">check_circle</span>
+                      <span className="text-sm text-gray-500">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                {/* What you get */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
-                    Qué incluye tu suscripción
-                  </h3>
-                  <ul className="space-y-2.5">
-                    {[
-                      "Leads calificados con intención real de compra",
-                      "Entrega en tiempo real por WhatsApp",
-                      "Acceso al panel de seguimiento",
-                      "Sin comisión por venta cerrada",
-                      "Soporte prioritario de lunes a viernes",
-                      "Cancela cuando quieras, sin penalidades",
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-primary text-[14px] mt-0.5 flex-shrink-0">check_circle</span>
-                        <span className="text-sm text-gray-500">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {/* Pricing */}
+              <div className="bg-black rounded-2xl p-6 border border-primary/20 shadow-[0_0_40px_rgba(0,229,229,0.06)]">
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="text-white/50 text-sm">Precio referencial</span>
+                  <span className="text-white/30 text-sm line-through">$25.980</span>
                 </div>
+                {descuento ? (
+                  <>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-white font-bold text-sm">3 meses con descuento</span>
+                      <span
+                        className="text-3xl font-black text-primary"
+                        style={{ fontFamily: "var(--font-space), sans-serif" }}
+                      >
+                        $12.990
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-primary/60 mt-1 uppercase tracking-wide">50% dcto · Solo por tiempo limitado</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-white font-bold text-sm">Precio mensual</span>
+                      <span
+                        className="text-3xl font-black text-white"
+                        style={{ fontFamily: "var(--font-space), sans-serif" }}
+                      >
+                        $25.980
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-white/30 mt-1 uppercase tracking-wide">+ IVA · Cancela cuando quieras</p>
+                  </>
+                )}
+              </div>
 
-                {/* Pricing */}
-                <div className="bg-black rounded-2xl p-6 border border-primary/20 shadow-[0_0_40px_rgba(0,229,229,0.06)]">
-                  <div className="flex items-baseline justify-between mb-1">
-                    <span className="text-white/50 text-sm">Precio referencial</span>
-                    <span className="text-white/30 text-sm line-through">$25.980</span>
+            </aside>
+
+            {/* ── Form ──────────────────────────────────── */}
+            <div className="lg:col-span-8 order-1 lg:order-2">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+              >
+                <form onSubmit={handleSubmit} className="space-y-6">
+
+                  {/* Datos personales */}
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                    <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black flex items-center justify-center">1</span>
+                      Datos personales
+                    </h2>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <Field label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Juan" required />
+                      <Field label="Apellido" name="apellido" value={form.apellido} onChange={handleChange} placeholder="Pérez" required />
+
+                      {/* RUT con validación */}
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                          RUT <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          name="rut"
+                          value={form.rut}
+                          onChange={(e) => {
+                            handleChange(e);
+                            setRutError(false);
+                          }}
+                          onBlur={() => {
+                            if (form.rut.length > 3) setRutError(!validateRut(form.rut));
+                          }}
+                          placeholder="12.345.678-9"
+                          required
+                          className={`w-full bg-gray-50 border rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 transition-colors ${
+                            rutError
+                              ? "border-red-400 focus:border-red-400 focus:ring-red-200"
+                              : "border-gray-200 focus:border-primary focus:ring-primary/20"
+                          }`}
+                        />
+                        {rutError && (
+                          <p className="text-red-500 text-xs mt-1">RUT inválido. Verifica el dígito verificador.</p>
+                        )}
+                      </div>
+
+                      <Field label="Email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="juan@concesionaria.cl" required />
+
+                      {/* Teléfono con prefijo +56 */}
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                          Número de teléfono <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 py-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-sm text-gray-600 font-medium select-none">
+                            +56
+                          </span>
+                          <input
+                            name="telefono"
+                            type="tel"
+                            value={form.telefono}
+                            onChange={handleChange}
+                            placeholder="9 1234 5678"
+                            required
+                            maxLength={9}
+                            inputMode="numeric"
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-r-xl px-4 py-3 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                          />
+                        </div>
+                        {form.telefono.length > 0 && form.telefono.length !== 9 && (
+                          <p className="text-orange-500 text-xs mt-1">Deben ser exactamente 9 dígitos.</p>
+                        )}
+                        {form.telefono.length === 9 && (
+                          <p className="text-green-600 text-xs mt-1">{handlePhoneDisplay(form.telefono)}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {descuento ? (
-                    <>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-white font-bold text-sm">3 meses con descuento</span>
-                        <span
-                          className="text-3xl font-black text-primary"
-                          style={{ fontFamily: "var(--font-space), sans-serif" }}
-                        >
-                          $12.990
-                        </span>
+
+                  {/* Concesionario */}
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                    <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black flex items-center justify-center">2</span>
+                      Tu concesionario
+                    </h2>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <Field label="Nombre del concesionario" name="concesionario" value={form.concesionario} onChange={handleChange} placeholder="Nombre del concesionario donde trabajas" required />
                       </div>
-                      <p className="text-[10px] text-primary/60 mt-1 uppercase tracking-wide">50% dcto · Solo por tiempo limitado</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-white font-bold text-sm">Precio mensual</span>
-                        <span
-                          className="text-3xl font-black text-white"
-                          style={{ fontFamily: "var(--font-space), sans-serif" }}
-                        >
-                          $25.980
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-white/30 mt-1 uppercase tracking-wide">+ IVA · Cancela cuando quieras</p>
-                    </>
-                  )}
-                </div>
-
-              </aside>
-
-              {/* ── Form ──────────────────────────────────── */}
-              <div className="lg:col-span-8 order-1 lg:order-2">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-                >
-                  <form onSubmit={handleSubmit} className="space-y-6">
-
-                    {/* Datos personales */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-                      <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black flex items-center justify-center">1</span>
-                        Datos personales
-                      </h2>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <Field label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Juan" required />
-                        <Field label="Apellido" name="apellido" value={form.apellido} onChange={handleChange} placeholder="Pérez" required />
-                        <Field label="RUT" name="rut" value={form.rut} onChange={handleChange} placeholder="12.345.678-9" required />
-                        <Field label="Email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="juan@concesionaria.cl" required />
-                        <Field label="Número de teléfono" name="telefono" type="tel" value={form.telefono} onChange={handleChange} placeholder="+56 9 1234 5678" required />
+                      <div className="sm:col-span-2">
+                        <Field label="Comuna donde está el concesionario" name="comuna" value={form.comuna} onChange={handleChange} placeholder="Ej: Las Condes, Providencia, Viña del Mar…" required />
                       </div>
                     </div>
+                  </div>
 
-                    {/* Concesionario */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-                      <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black flex items-center justify-center">2</span>
-                        Tu concesionario
-                      </h2>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="sm:col-span-2">
-                          <Field label="Nombre del concesionario" name="concesionario" value={form.concesionario} onChange={handleChange} placeholder="Nombre del concesionario donde trabajas" required />
-                        </div>
-                        <div className="sm:col-span-2">
-                          <Field label="Comuna donde está el concesionario" name="comuna" value={form.comuna} onChange={handleChange} placeholder="Ej: Las Condes, Providencia, Viña del Mar…" required />
-                        </div>
-                      </div>
+                  {/* Marcas */}
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                    <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black flex items-center justify-center">3</span>
+                      Marcas con las que trabajas
+                      <span className="text-red-500 ml-0.5">*</span>
+                    </h2>
+                    <p className="text-gray-400 text-xs mb-5">Selecciona todas las que correspondan</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {BRANDS.map((brand) => {
+                        const selected = brands.includes(brand);
+                        return (
+                          <button
+                            key={brand}
+                            type="button"
+                            onClick={() => toggleBrand(brand)}
+                            className={[
+                              "px-3 py-2 rounded-xl border text-sm font-medium transition-all text-left",
+                              selected
+                                ? "bg-primary/10 border-primary/50 text-primary"
+                                : "bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-100",
+                            ].join(" ")}
+                          >
+                            <span className={`inline-block w-3.5 h-3.5 rounded-sm border mr-2 align-middle transition-colors ${selected ? "bg-primary border-primary" : "border-gray-300"}`} />
+                            {brand}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {brands.length === 0 && (
+                      <p className="text-xs text-gray-400 mt-3">Selecciona al menos una marca para continuar</p>
+                    )}
+                  </div>
 
-                    {/* Marcas */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-                      <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black flex items-center justify-center">3</span>
-                        Marcas con las que trabajas
-                        <span className="text-red-500 ml-0.5">*</span>
-                      </h2>
-                      <p className="text-gray-400 text-xs mb-5">Selecciona todas las que correspondan</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                        {BRANDS.map((brand) => {
-                          const selected = brands.includes(brand);
-                          return (
-                            <button
-                              key={brand}
-                              type="button"
-                              onClick={() => toggleBrand(brand)}
-                              className={[
-                                "px-3 py-2 rounded-xl border text-sm font-medium transition-all text-left",
-                                selected
-                                  ? "bg-primary/10 border-primary/50 text-primary"
-                                  : "bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-100",
-                              ].join(" ")}
-                            >
-                              <span className={`inline-block w-3.5 h-3.5 rounded-sm border mr-2 align-middle transition-colors ${selected ? "bg-primary border-primary" : "border-gray-300"}`} />
-                              {brand}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {brands.length === 0 && (
-                        <p className="text-xs text-gray-400 mt-3">Selecciona al menos una marca para continuar</p>
-                      )}
-                    </div>
-
-                    {/* Descuento */}
-                    <div
-                      className={[
-                        "rounded-2xl border-2 p-6 md:p-8 transition-all cursor-pointer",
-                        descuento
-                          ? "bg-primary/5 border-primary/40 shadow-[0_0_32px_rgba(0,229,229,0.08)]"
-                          : "bg-white border-gray-100 shadow-sm hover:border-gray-200",
-                      ].join(" ")}
-                      onClick={() => setDescuento((v) => !v)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={[
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all",
-                          descuento ? "border-primary bg-primary" : "border-gray-300 bg-white",
-                        ].join(" ")}>
-                          {descuento && (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                              <path d="M2 5l2.5 2.5 3.5-4" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-gray-900 text-sm mb-1">
-                            ¿Quieres acceder al descuento del 50% por los primeros 3 meses?
-                          </p>
-                          <p className="text-gray-500 text-sm">
-                            Precio referencial: <span className="line-through text-gray-400">$25.980</span>{" "}
-                            · Precio con descuento:{" "}
-                            <span className="text-primary font-bold">$12.990</span>
-                          </p>
-                        </div>
-                        {!descuento && (
-                          <span className="hidden sm:inline-flex items-center gap-1.5 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0">
-                            ¡Sí! Dame el descuento
-                          </span>
-                        )}
+                  {/* Descuento */}
+                  <div
+                    className={[
+                      "rounded-2xl border-2 p-6 md:p-8 transition-all cursor-pointer",
+                      descuento
+                        ? "bg-primary/5 border-primary/40 shadow-[0_0_32px_rgba(0,229,229,0.08)]"
+                        : "bg-white border-gray-100 shadow-sm hover:border-gray-200",
+                    ].join(" ")}
+                    onClick={() => setDescuento((v) => !v)}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={[
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all",
+                        descuento ? "border-primary bg-primary" : "border-gray-300 bg-white",
+                      ].join(" ")}>
                         {descuento && (
-                          <span className="hidden sm:inline-flex items-center gap-1.5 bg-primary text-black text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0">
-                            ✓ Descuento aplicado
-                          </span>
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M2 5l2.5 2.5 3.5-4" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         )}
                       </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading || brands.length === 0}
-                      className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all text-base shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <>
-                          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="40 20" />
-                          </svg>
-                          Enviando solicitud...
-                        </>
-                      ) : (
-                        <>
-                          Enviar solicitud
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        </>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900 text-sm mb-1">
+                          ¿Quieres acceder al descuento del 50% por los primeros 3 meses?
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                          Precio referencial: <span className="line-through text-gray-400">$25.980</span>{" "}
+                          · Precio con descuento:{" "}
+                          <span className="text-primary font-bold">$12.990</span>
+                        </p>
+                      </div>
+                      {!descuento && (
+                        <span className="hidden sm:inline-flex items-center gap-1.5 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0">
+                          ¡Sí! Dame el descuento
+                        </span>
                       )}
-                    </button>
+                      {descuento && (
+                        <span className="hidden sm:inline-flex items-center gap-1.5 bg-primary text-black text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0">
+                          ✓ Descuento aplicado
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-                    <p className="text-center text-gray-400 text-xs">
-                      Al enviar, aceptas que Electrificarte S.P.A. se contacte contigo para gestionar tu acceso a la red de vendedores.
-                    </p>
+                  {error && (
+                    <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
+                  )}
 
-                  </form>
-                </motion.div>
-              </div>
+                  <button
+                    type="submit"
+                    disabled={loading || brands.length === 0 || rutError}
+                    className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all text-base shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="40 20" />
+                        </svg>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        Continuar al pago
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </>
+                    )}
+                  </button>
 
+                  <p className="text-center text-gray-400 text-xs">
+                    Serás redirigido a WebPay para completar el pago de forma segura. Al enviar, aceptas los términos de la red de vendedores Electrificarte.
+                  </p>
+
+                </form>
+              </motion.div>
             </div>
-          ) : (
-            /* ── Success ──────────────────────────────────── */
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-center py-24 max-w-lg mx-auto"
-            >
-              <div className="w-16 h-16 bg-primary/10 border border-primary/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <path d="M6 14l6 6 10-12" stroke="#00E5E5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h2
-                className="text-3xl font-black text-gray-900 mb-3"
-                style={{ fontFamily: "var(--font-space), sans-serif" }}
-              >
-                ¡Solicitud enviada!
-              </h2>
-              <p className="text-gray-500 text-base mb-8">
-                Revisaremos tu perfil y te contactaremos en menos de 24 horas para activar tu acceso
-                {descuento ? " con el descuento del 50% aplicado" : ""}.
-              </p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 text-primary hover:text-primary-dark text-sm font-medium transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 7H4M6 4L3 7l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                Volver al inicio
-              </Link>
-            </motion.div>
-          )}
 
+          </div>
         </div>
       </main>
 

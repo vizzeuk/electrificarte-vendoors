@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -23,7 +24,7 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 const faqs = [
   {
     q: "¿Cuántos leads puedo recibir al mes?",
-    a: "Varía según la disponibilidad de tu zona y la demanda del momento. Todos los leads son personas que completaron el formulario con intención real de compra — no enviamos contactos sin calificar.",
+    a: "Varía según la disponibilidad de tu zona y la demanda del momento. Todos los leads son personas que completaron el formulario con intención real de compra.",
   },
   {
     q: "¿Los leads ya están precalificados?",
@@ -35,7 +36,7 @@ const faqs = [
   },
   {
     q: "¿Cómo se entrega el lead?",
-    a: "Te llegará en tiempo real por WhatsApp y correo con nombre, teléfono, modelo de interés y presupuesto aproximado. Nada más que necesites.",
+    a: "Te entregamos una prospección del lead (modelo de interés, forma de financiamiento, etc.) y compites por ser la mejor oferta de nuestra red de vendedores, si tu propuesta convence al cliente, te entregamos su contacto.",
   },
 ];
 
@@ -166,22 +167,22 @@ export default function HomePage() {
                 </div>
               </motion.div>
 
-              {/* Video placeholder — solo desktop */}
+              {/* Hero image */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="w-full"
               >
-                <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 shadow-[0_8px_48px_rgba(0,229,229,0.12)] bg-white/5 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-14 h-14 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-3">
-                      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                        <path d="M8 5l10 6-10 6V5z" fill="#00E5E5" />
-                      </svg>
-                    </div>
-                    <p className="text-white/30 text-sm">Video próximamente</p>
-                  </div>
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_8px_48px_rgba(0,229,229,0.12)]">
+                  <Image
+                    src="/imagen-hero.png"
+                    alt="Red de vendedores Electrificarte"
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
                 </div>
               </motion.div>
             </div>
@@ -195,7 +196,7 @@ export default function HomePage() {
               {[
                 { value: "3×",    label: "más cierres mensuales" },
                 { value: "120+",  label: "modelos disponibles" },
-                { value: "24h",   label: "entrega del lead" },
+                { value: "48-96h",   label: "entrega del lead" },
                 { value: "100%",  label: "leads con intención" },
               ].map((s) => (
                 <div key={s.value} className="text-center md:px-8">
@@ -245,16 +246,16 @@ export default function HomePage() {
                     step: "02",
                     icon: "send",
                     color: "from-primary/30 to-primary/10",
-                    title: "Te enviamos el lead",
-                    desc: "Recibes en tiempo real por WhatsApp: nombre, teléfono, modelo de interés y presupuesto. Nada más.",
-                    tag: "Tiempo real · 24h",
+                    title: "Te prospectamos el lead",
+                    desc: "Te informamos del interés del cliente por un modelo. Entras a competir por ser la mejor oferta entre nuestra red de vendedores.",
+                    tag: "Tiempo real · 48 - 96h",
                   },
                   {
                     step: "03",
                     icon: "handshake",
                     color: "from-primary/20 to-primary/5",
                     title: "Tú cierras la venta",
-                    desc: "Te comunicas directo con el cliente. La relación y la comisión son 100% tuyas.",
+                    desc: "Si tu propuesta convence al cliente, te comunicamos con él. La comisión es 100% tuya.",
                     tag: "100% tu comisión",
                   },
                 ].map((item, i) => (
@@ -331,31 +332,31 @@ export default function HomePage() {
               </h2>
             </FadeIn>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-6 items-stretch">
               {[
                 {
                   icon: <IconTarget />,
                   title: "Leads precalificados",
-                  desc: "Cada contacto ya completó el formulario con intención real. Sin curiosos, sin pérdida de tiempo.",
+                  desc: "Cada contacto ya completó el formulario con intención real de compra. Sin curiosos, sin pérdida de tiempo.",
                 },
                 {
                   icon: <IconBolt />,
-                  title: "Entrega en 24 horas",
-                  desc: "El lead llega el mismo día en que el cliente se interesa. La ventana de cierre es máxima.",
+                  title: "Compites por ser la mejor oferta",
+                  desc: "Entre nuestra red de vendedores, la mejor oferta se le hace llegar al cliente. Su interés depende 100% de tu propuesta.",
                 },
                 {
                   icon: <IconBan />,
                   title: "Sin gestión de publicidad",
-                  desc: "No necesitas invertir en Google Ads, redes sociales ni portales de autos. Nosotros lo hacemos.",
+                  desc: "Electrificarte te dirige el tráfico de forma directa. Compite por ser la mejor oferta y aumenta tus potenciales clientes.",
                 },
                 {
                   icon: <IconShield />,
                   title: "Red exclusiva y controlada",
-                  desc: "Leads segmentados por cercanía geográfica.",
+                  desc: "Leads segmentados geográficamente. Solo vendedores verificados acceden a la red, garantizando competencia sana y calificada.",
                 },
               ].map((b, i) => (
-                <FadeIn key={b.title} delay={i * 0.1}>
-                  <div className="flex gap-5 bg-white/5 border border-white/10 rounded-2xl p-6">
+                <FadeIn key={b.title} delay={i * 0.1} className="h-full">
+                  <div className="flex gap-5 bg-white/5 border border-white/10 rounded-2xl p-6 h-full">
                     <span className="text-primary mt-0.5 flex-shrink-0">{b.icon}</span>
                     <div>
                       <h3 className="text-white font-bold mb-1">{b.title}</h3>
