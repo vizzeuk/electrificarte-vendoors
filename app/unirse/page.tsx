@@ -115,8 +115,18 @@ export default function UnirsePage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error al enviar");
-      // Redirigir a Reveniu
-      window.location.href = json.checkoutUrl;
+      // POST directo a WebPay con el token de Reveniu (igual que formulario principal)
+      const { completionUrl, securityToken } = json;
+      const wpForm = document.createElement("form");
+      wpForm.method = "POST";
+      wpForm.action = completionUrl;
+      const tkInput = document.createElement("input");
+      tkInput.type = "hidden";
+      tkInput.name = "TBK_TOKEN";
+      tkInput.value = securityToken;
+      wpForm.appendChild(tkInput);
+      document.body.appendChild(wpForm);
+      wpForm.submit();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocurrió un error. Intenta nuevamente.");
       setLoading(false);

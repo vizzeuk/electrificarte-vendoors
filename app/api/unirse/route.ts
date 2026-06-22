@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
 
-// URL del checkout de Reveniu para la suscripción de vendedores
-const VENDOR_CHECKOUT_URL =
-  process.env.VENDOR_CHECKOUT_URL ??
-  "https://app.reveniu.com/checkout-custom-link/HWentiqCA9HLbkzJOhE7wpmNUxj6p1D5";
+const REVENIU_API = process.env.REVENIU_API_BASE ?? "https://production.reveniu.com/api/v1";
 
 const bodySchema = z.object({
   nombre:        z.string().min(1).max(80),
@@ -34,45 +31,67 @@ export async function POST(req: NextRequest) {
   }
   const data = parsed.data;
 
-  // Token de sesión: vincula el formulario al checkout de Reveniu.
-  // Se guarda como cookie corta y se verifica en /gracias.
-  const sessionToken = crypto.randomUUID();
+  const orderId = crypto.randomUUID();
+  const planId = Number(process.env.REVENIU_VENDOR_PLAN_ID);
 
-  // Notificar a n8n con los datos del vendedor (bloqueante — necesitamos saber si falla)
-  const webhookUrl = process.env.N8N_VENDOR_WEBHOOK_URL;
-  if (webhookUrl) {
-    try {
-      const webhookRes = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, sessionToken, source: "vendedores" }),
-      });
-      if (!webhookRes.ok) {
-        console.error("n8n vendor webhook respondió", webhookRes.status, await webhookRes.text());
-      }
-    } catch (err) {
-      console.error("n8n vendor webhook error:", err);
-    }
-  } else {
-    console.warn("N8N_VENDOR_WEBHOOK_URL no está configurado — datos del vendedor no notificados");
+  if (!planId) {
+    console.error("Falta REVENIU_VENDOR_PLAN_ID en variables de entorno");
+    return NextResponse.json({ error: "Configuración de pago no disponible" }, { status: 500 });
   }
 
-  // Construye la URL de retorno que Reveniu usará tras el pago exitoso
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://vendedores.electrificarte.com";
-  const successUrl = `${baseUrl}/gracias?token=${sessionToken}`;
+  // ── 1. Crear transacción en Reveniu ────────────────────────────────────────
+  let completionUrl: string;
+  let securityToken: string;
+  try {
+    const reveniuRes = await fetch(`${REVENIU_API}/subscriptions/`, {
+      method: "POST",
+      headers: {
+        "Reveniu-Secret-Key": process.env.REVENIU_API_KEY ?? "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plan_id: planId,
+        external_id: orderId,
+        field_values: { email: data.email, name: `${data.nombre} ${data.apellido}` },
+      }),
+    });
+    if (!reveniuRes.ok) {
+      console.error("Reveniu respondió", reveniuRes.status, await reveniuRes.text());
+      return NextResponse.json({ error: "No se pudo iniciar el pago" }, { status: 502 });
+    }
+    const json = await reveniuRes.json();
+    completionUrl = json.completion_url;
+    securityToken = json.security_token;
+    if (!completionUrl || !securityToken) {
+      return NextResponse.json({ error: "Respuesta de pago incompleta" }, { status: 502 });
+    }
+  } catch (err) {
+    console.error("Error llamando a Reveniu:", err);
+    return NextResponse.json({ error: "No se pudo iniciar el pago" }, { status: 502 });
+  }
 
-  const res = NextResponse.json({ checkoutUrl: VENDOR_CHECKOUT_URL });
+  // ── 2. Notificar a n8n con orderId como external_id ────────────────────────
+  const webhookUrl = process.env.N8N_VENDOR_WEBHOOK_URL;
+  if (webhookUrl) {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, orderId, status: "pendiente", source: "vendedores" }),
+    }).catch((err) => console.error("n8n vendor webhook error:", err));
+  } else {
+    console.warn("N8N_VENDOR_WEBHOOK_URL no está configurado");
+  }
 
-  // Cookie que valida la página /gracias (2 horas)
-  res.cookies.set("ev_vendor_session", sessionToken, {
+  // ── 3. Cookie + respuesta ──────────────────────────────────────────────────
+  const res = NextResponse.json({ completionUrl, securityToken });
+
+  res.cookies.set("ev_vendor_session", orderId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 2,
     path: "/",
   });
-
-  // Cookie de display (nombre para mostrar en /gracias)
   res.cookies.set("ev_vendor_name", data.nombre, {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
@@ -80,9 +99,6 @@ export async function POST(req: NextRequest) {
     maxAge: 60 * 60 * 2,
     path: "/",
   });
-
-  // Silencia el warning de successUrl no usado — se configurará en el plan de Reveniu
-  void successUrl;
 
   return res;
 }
