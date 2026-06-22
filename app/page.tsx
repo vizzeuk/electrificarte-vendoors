@@ -114,78 +114,58 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
 
-        {/* ── HERO — fondo negro ──────────────────────────────── */}
+        {/* ── HERO — imagen de fondo ──────────────────────────── */}
         <section className="relative min-h-screen flex items-center overflow-hidden bg-black">
-          <div className="absolute inset-0 z-0">
-            <div
-              className="absolute inset-0 opacity-[0.03]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)",
-                backgroundSize: "60px 60px",
-              }}
-            />
-            <div className="absolute top-0 right-0 w-[600px] h-[500px] bg-primary/5 rounded-full blur-[160px]" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-[120px]" />
-          </div>
+          {/* Background image */}
+          <Image
+            src="/imagen-hero.png"
+            alt="Red de vendedores Electrificarte"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+          {/* Overlay oscuro con degradado */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
+          {/* Tinte cyan muy sutil */}
+          <div className="absolute inset-0 bg-primary/5" />
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 pt-24 pb-16 md:pt-28 md:pb-20 w-full">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              {/* Copy */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="max-w-2xl"
+            >
+              <h1
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-4"
+                style={{ fontFamily: "var(--font-space), sans-serif" }}
               >
-                <h1
-                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-4"
-                  style={{ fontFamily: "var(--font-space), sans-serif" }}
+                Vende más autos eléctricos{" "}
+                <span className="text-primary">sin buscar clientes</span>
+              </h1>
+
+              <p className="text-base md:text-lg text-white/70 mb-7 max-w-xl leading-relaxed">
+                Únete a la red de vendedores de Electrificarte y recibe leads calificados de personas que ya quieren comprar. Sin gestionar publicidad, sin perder tiempo.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/unirse"
+                  className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
                 >
-                  Vende más autos eléctricos{" "}
-                  <span className="text-primary">sin buscar clientes</span>
-                </h1>
-
-                <p className="text-base md:text-lg text-white/60 mb-7 max-w-xl leading-relaxed">
-                  Únete a la red de vendedores de Electrificarte y recibe leads calificados de personas que ya quieren comprar. Sin gestionar publicidad, sin perder tiempo.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href="/unirse"
-                    className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-                  >
-                    Quiero sumarme
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </Link>
-                  <a
-                    href="#como-funciona"
-                    className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-8 py-4 rounded-xl transition-all"
-                  >
-                    Cómo funciona
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </a>
-                </div>
-              </motion.div>
-
-              {/* Hero image */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="w-full"
-              >
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_8px_48px_rgba(0,229,229,0.12)]">
-                  <Image
-                    src="/imagen-hero.png"
-                    alt="Red de vendedores Electrificarte"
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
-                </div>
-              </motion.div>
-            </div>
+                  Quiero sumarme
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </Link>
+                <a
+                  href="#como-funciona"
+                  className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/10 text-white font-medium px-8 py-4 rounded-xl transition-all backdrop-blur-sm"
+                >
+                  Cómo funciona
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </a>
+              </div>
+            </motion.div>
           </div>
         </section>
 
