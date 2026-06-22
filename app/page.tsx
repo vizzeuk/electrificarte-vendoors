@@ -131,8 +131,9 @@ export default function HomePage() {
             alt="Red de vendedores Electrificarte"
             fill
             priority
-            className="sm:hidden object-cover object-top"
+            className="sm:hidden object-cover object-right"
             sizes="100vw"
+            style={{ objectPosition: "70% center", transform: "scale(1.1)", transformOrigin: "right center" }}
           />
 
           {/* Overlay desktop: degradado izquierda → derecha */}
@@ -183,19 +184,6 @@ export default function HomePage() {
                 </a>
               </div>
 
-              {/* Stats rápidos — solo mobile, debajo de los CTAs */}
-              <div className="flex items-center gap-6 mt-8 sm:hidden">
-                {[
-                  { value: "3×",   label: "más cierres" },
-                  { value: "48h",  label: "entrega lead" },
-                  { value: "100%", label: "intención real" },
-                ].map((s) => (
-                  <div key={s.value} className="text-center">
-                    <p className="text-primary font-black text-xl" style={{ fontFamily: "var(--font-space), sans-serif" }}>{s.value}</p>
-                    <p className="text-white/50 text-[10px] uppercase tracking-wide">{s.label}</p>
-                  </div>
-                ))}
-              </div>
             </motion.div>
           </div>
         </section>
