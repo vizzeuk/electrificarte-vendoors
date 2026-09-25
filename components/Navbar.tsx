@@ -1,72 +1,100 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Icon } from "@/components/Icon";
+import { Logo } from "@/components/Logo";
+import { NAV_LINKS } from "@/lib/site";
 
+// Solo el home abre con una banda oscura (foto): ahí la navegación parte transparente.
+const DARK_HERO_PATHS = /^\/$/;
+
+function subscribeScroll(onChange: () => void) {
+  window.addEventListener("scroll", onChange, { passive: true });
+  return () => window.removeEventListener("scroll", onChange);
+}
+const getScrolled = () => window.scrollY > 24;
+const getServerScrolled = () => false;
+
+/** Navegación del sistema de diseño v1 (misma pieza que electrificarteweb, sin menús). */
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const scrolled = useSyncExternalStore(subscribeScroll, getScrolled, getServerScrolled);
 
+  // Bloquea el scroll del fondo mientras el menú móvil está abierto.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
-  const transparent = !scrolled;
+  const transparent = DARK_HERO_PATHS.test(pathname) && !scrolled && !mobileOpen;
+  const close = () => setMobileOpen(false);
+  const isCurrent = (href: string) => (href.startsWith("/#") ? false : pathname === href);
 
   return (
-    <header
-      className={[
-        "fixed top-0 inset-x-0 z-50 transition-all duration-300",
-        transparent
-          ? "bg-transparent border-b border-transparent"
-          : "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm shadow-black/5",
-      ].join(" ")}
-    >
-      <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" aria-label="Electrificarte Vendedores - Inicio">
-          <img
-            src="/logo-electrificarte.png"
-            alt="Electrificarte"
-            className={[
-              "h-7 md:h-8 w-auto object-contain transition-all duration-300",
-              transparent ? "" : "brightness-0",
-            ].join(" ")}
-          />
-        </Link>
+    <>
+      <header className={`nav${transparent ? " theme-dark" : ""}`}>
+        <div className="wrap nav__in">
+          <div className="nav__left">
+            <Link href="/" aria-label="Electrificarte Vendedores, inicio" className="nav__brand" onClick={close}>
+              <Logo className="h-[14px] sm:h-[17px]" />
+              <span className="nav__tag">Vendedores</span>
+            </Link>
+            <nav className="nav__links" aria-label="Navegación principal">
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="nav__link"
+                  aria-current={isCurrent(l.href) ? "page" : undefined}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-8">
-          {[
-            { href: "#como-funciona", label: "Cómo funciona" },
-            { href: "#precios",       label: "Precios" },
-            { href: "#faq",           label: "FAQ" },
-          ].map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className={[
-                "text-sm font-medium transition-colors",
-                transparent
-                  ? "text-white/70 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900",
-              ].join(" ")}
+          <div className="nav__right">
+            <Link href="/unirse" className="btn btn--primary btn--sm nav__cta">
+              Quiero sumarme
+            </Link>
+            <button
+              type="button"
+              className="btn btn--quiet btn--icon nav__menu-btn"
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
             >
-              {l.label}
-            </a>
-          ))}
-        </nav>
+              <Icon name={mobileOpen ? "close" : "menu"} />
+            </button>
+          </div>
+        </div>
+      </header>
 
-        {/* CTA */}
-        <Link
-          href="/unirse"
-          className="bg-primary hover:bg-primary-dark text-black font-bold text-sm px-5 py-2.5 rounded-xl transition-colors shadow-[0_4px_20px_rgba(0,229,229,0.25)]"
-        >
-          Quiero sumarme
-        </Link>
+      <div id="mobile-nav" className={`mnav${mobileOpen ? " is-open" : ""}`} hidden={!mobileOpen}>
+        <ul>
+          {NAV_LINKS.map((l) => (
+            <li key={l.href}>
+              <Link href={l.href} onClick={close}>
+                {l.label}
+                <Icon name="chevron_right" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="mnav__cta">
+          <Link href="/unirse" className="btn btn--primary btn--lg" onClick={close}>
+            Quiero sumarme
+          </Link>
+        </div>
       </div>
-    </header>
+    </>
   );
 }
