@@ -50,6 +50,13 @@ export const metadata: Metadata = {
     siteName: "Electrificarte Vendedores",
     locale: "es_CL",
     type: "website",
+    url: "/",
+  },
+  // La imagen sale de app/opengraph-image.tsx (Next la agrega sola a og:image y twitter:image).
+  twitter: {
+    card: "summary_large_image",
+    title: "Electrificarte Vendedores",
+    description: "Recibe contactos de personas interesadas en los autos electrificados que vendes.",
   },
 };
 

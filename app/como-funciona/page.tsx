@@ -3,13 +3,13 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { JoinCta } from "@/components/JoinCta";
 import { PageHead } from "@/components/PageHead";
-import { PRICE, WEB_URL } from "@/lib/site";
+import { PRICE, WEB_URL, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/como-funciona", {
   title: "Cómo funciona",
   description:
     "Paso a paso de la red de vendedores de Electrificarte: te registras, activamos tu cuenta, recibes contactos de personas interesadas en tus modelos y cierras directo con ellas.",
-};
+});
 
 const STEPS = [
   {

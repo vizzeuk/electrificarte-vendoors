@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Icon } from "@/components/Icon";
 import { PageHead } from "@/components/PageHead";
-import { CONTACT, WEB_URL } from "@/lib/site";
+import { CONTACT, WEB_URL, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/privacidad", {
   title: "Privacidad",
   description:
     "Qué datos pide el registro de vendedores de Electrificarte, para qué se usan y enlace a la política de privacidad de electrificarte.com.",
-};
+});
 
 export default function PrivacidadPage() {
   return (

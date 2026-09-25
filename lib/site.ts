@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 // Datos compartidos del sitio de vendedores: enlaces, precio y preguntas frecuentes.
 // Todo el copy es verificable: no hay cifras de resultados (leads por mes, conversión,
 // cantidad de vendedores) porque no existen datos publicados. No agregarlas a mano.
@@ -136,3 +137,19 @@ export const HOME_FAQ: Faq[] = [
   FAQ_GROUPS[2].items[3],
   FAQ_GROUPS[2].items[4],
 ];
+
+/**
+ * Completa la vista previa al compartir (og:*, twitter:*) y la URL canónica de cada página a partir
+ * de su propio title/description. Sin esto, todas heredaban el título y la URL del home.
+ * La imagen la pone app/opengraph-image.tsx.
+ */
+export function withShare(path: string, meta: Metadata): Metadata {
+  const title = typeof meta.title === "string" ? `${meta.title} | Electrificarte Vendedores` : "Electrificarte Vendedores";
+  const description = meta.description ?? undefined;
+  return {
+    ...meta,
+    alternates: { canonical: path, ...meta.alternates },
+    openGraph: { title, description, url: path, siteName: "Electrificarte Vendedores", locale: "es_CL", type: "website", ...meta.openGraph },
+    twitter: { card: "summary_large_image", title, description, ...meta.twitter },
+  };
+}

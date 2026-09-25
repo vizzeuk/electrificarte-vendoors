@@ -3,13 +3,13 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { Icon } from "@/components/Icon";
 import { IconWhatsApp } from "@/components/SocialIcons";
-import { CONTACT } from "@/lib/site";
+import { CONTACT, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/gracias", {
   title: "Registro recibido",
   description: "Recibimos tu registro en la red de vendedores de Electrificarte.",
   robots: { index: false, follow: false },
-};
+});
 
 const NEXT_STEPS = [
   {

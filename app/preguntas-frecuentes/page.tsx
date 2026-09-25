@@ -4,13 +4,13 @@ import { FaqList } from "@/components/Faq";
 import { Icon } from "@/components/Icon";
 import { PageHead } from "@/components/PageHead";
 import { IconWhatsApp } from "@/components/SocialIcons";
-import { CONTACT, FAQ_GROUPS } from "@/lib/site";
+import { CONTACT, FAQ_GROUPS, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/preguntas-frecuentes", {
   title: "Preguntas frecuentes",
   description:
     "Respuestas sobre la red de vendedores de Electrificarte: cómo llegan los contactos, cuánto cuesta, cómo se paga, cómo cancelar y qué pasa después del registro.",
-};
+});
 
 export default function PreguntasFrecuentesPage() {
   const faqSchema = {

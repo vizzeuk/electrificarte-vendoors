@@ -3,13 +3,13 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { JoinCta } from "@/components/JoinCta";
 import { PageHead } from "@/components/PageHead";
-import { PRICE } from "@/lib/site";
+import { PRICE, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/ventajas", {
   title: "Ventajas",
   description:
     "Por qué sumarte a la red de vendedores oficiales de Electrificarte: contactos interesados en modelos específicos, sin publicidad, sin comisión por venta y sin permanencia.",
-};
+});
 
 const BENEFITS = [
   {

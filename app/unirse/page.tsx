@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Icon } from "@/components/Icon";
 import { PageHead } from "@/components/PageHead";
 import { JoinForm } from "@/components/JoinForm";
-import { INCLUDES, PRICE } from "@/lib/site";
+import { INCLUDES, PRICE, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/unirse", {
   title: "Súmate a la red",
   description: `Regístrate en la red de vendedores oficiales de Electrificarte: ${PRICE.launch} al mes los primeros ${PRICE.launchMonths} meses, sin permanencia. Pago con Webpay.`,
-};
+});
 
 export default function UnirsePage() {
   return (

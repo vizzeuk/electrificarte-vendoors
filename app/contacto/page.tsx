@@ -3,13 +3,13 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { PageHead } from "@/components/PageHead";
 import { IconWhatsApp } from "@/components/SocialIcons";
-import { CONTACT, WEB_URL } from "@/lib/site";
+import { CONTACT, WEB_URL, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/contacto", {
   title: "Contacto",
   description:
     "Escríbele al equipo de vendedores de Electrificarte: vendedores@electrificarte.com o WhatsApp. Resolvemos dudas sobre la red, tu suscripción y tu cuenta.",
-};
+});
 
 export default function ContactoPage() {
   return (

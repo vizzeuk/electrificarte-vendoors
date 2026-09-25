@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Icon } from "@/components/Icon";
 import { PageHead } from "@/components/PageHead";
-import { CONTACT, PRICE, WEB_URL } from "@/lib/site";
+import { CONTACT, PRICE, WEB_URL, withShare } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare("/terminos", {
   title: "Términos y condiciones",
   description:
     "Condiciones de la suscripción a la red de vendedores de Electrificarte y enlace a los términos y condiciones de electrificarte.com.",
-};
+});
 
 export default function TerminosPage() {
   return (
