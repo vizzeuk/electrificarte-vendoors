@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# fuentes de Fontshare (licencia ITF FFL: no se redistribuyen, las baja scripts/fetch-fonts.mjs)
+app/fonts/fontshare/

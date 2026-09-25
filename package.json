@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/fetch-fonts.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/fetch-fonts.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "design:check": "node scripts/check-design.mjs"
   },
   "dependencies": {
     "framer-motion": "^12.38.0",
