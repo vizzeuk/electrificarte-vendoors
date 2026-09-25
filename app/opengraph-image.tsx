@@ -18,7 +18,6 @@ export default function OpengraphImage() {
     (
       <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 96px", backgroundColor: "#0F1716", fontFamily: "sans-serif" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logo} width={480} height={64} alt="Electrificarte" />
           <div style={{ display: "flex", marginLeft: 24, padding: "6px 14px", borderRadius: 4, backgroundColor: "#CAEFEA", color: "#0F1716", fontSize: 24, fontWeight: 700 }}>
             Vendedores
