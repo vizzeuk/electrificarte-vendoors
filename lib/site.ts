@@ -30,7 +30,6 @@ export const NAV_LINKS = [
   { href: "/como-funciona", label: "Cómo funciona" },
   { href: "/ventajas", label: "Ventajas" },
   { href: "/#precio", label: "Precio" },
-  { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
   { href: "/contacto", label: "Contacto" },
 ];
 
